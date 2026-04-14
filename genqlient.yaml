@@ -1,0 +1,12 @@
+schema: schema.graphql
+operations:
+  - queries/*.graphql
+generated: internal/githubapi/generated.go
+package: githubapi
+bindings:
+  Date:
+    type: string
+  DateTime:
+    type: string
+  URI:
+    type: string
