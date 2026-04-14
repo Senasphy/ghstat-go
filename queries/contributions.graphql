@@ -1,0 +1,41 @@
+query GetContributionCalendar($login: String!, $from: DateTime!, $to: DateTime!) {
+  user(login: $login) {
+    login
+    name
+    bio
+    url
+    followers {
+      totalCount
+    }
+    following {
+      totalCount
+    }
+    contributionsCollection(from: $from, to: $to) {
+      contributionYears
+      startedAt
+      endedAt
+      hasAnyContributions
+      contributionCalendar {
+        colors
+        isHalloween
+        months {
+          firstDay
+          name
+          totalWeeks
+          year
+        }
+        totalContributions
+        weeks {
+          firstDay
+          contributionDays {
+            color
+            contributionCount
+            contributionLevel
+            date
+            weekday
+          }
+        }
+      }
+    }
+  }
+}
