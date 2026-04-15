@@ -21,6 +21,11 @@ It opens a live view where you can move day by day, inspect totals, and switch y
 go run . <github-username>
 ```
 
+## Install from Binaries
+
+Prebuilt binaries are published with every release.
+Download the archive for your platform from the GitHub Releases page in the **Assets** section.
+
 Run with explicit token:
 
 ```bash
