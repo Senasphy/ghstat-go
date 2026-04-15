@@ -18,6 +18,12 @@ const (
 	cellGap       = 1
 	rowGap        = 1
 	panelGap      = 3
+
+	minCompactSplitWidth = 92
+	minChartWidth        = 42
+	minDetailsWidth      = 24
+	maxDetailsWidth      = 32
+	yearChipWindowSize   = 3
 )
 
 func (m Model) View() string {
@@ -29,32 +35,29 @@ func (m Model) View() string {
 	if contentWidth < 1 {
 		contentWidth = 1
 	}
-	sections := []string{m.renderHeader(contentWidth)}
+	header := m.renderHeader(contentWidth)
+	helpText := m.styles.help.Render(m.help.View(m.keys))
+	sections := []string{header}
 
 	if m.calendar == nil {
 		sections = append(sections, m.renderEmptyState(contentWidth))
 	} else {
-		sections = append(sections, m.renderMain(contentWidth))
+		main := m.renderMain(contentWidth)
+		availableHeight := m.height - m.styles.app.GetVerticalFrameSize() - lipgloss.Height(header) - lipgloss.Height(helpText) - 4
+		if availableHeight > lipgloss.Height(main) {
+			main = lipgloss.PlaceVertical(availableHeight, lipgloss.Center, main)
+		}
+		sections = append(sections, main)
 	}
 
-	sections = append(sections, m.styles.help.Render(m.help.View(m.keys)))
+	sections = append(sections, helpText)
 	return m.styles.app.Width(contentWidth).Render(strings.Join(sections, "\n\n"))
 }
 
 func (m Model) renderHeader(width int) string {
 	subject := m.login
-	displayName := ""
-	handle := ""
-	windowLabel := ""
 	if m.calendar != nil {
 		subject = m.calendar.Profile.Login
-		displayName = m.calendar.Profile.Name
-		handle = "@" + m.calendar.Profile.Login
-		windowLabel = fmt.Sprintf(
-			"%s to %s",
-			m.calendar.StartedAt.UTC().Format("Jan 2, 2006"),
-			m.calendar.EndedAt.UTC().Format("Jan 2, 2006"),
-		)
 		if m.calendar.Profile.Name != "" {
 			subject = fmt.Sprintf("%s (@%s)", m.calendar.Profile.Name, m.calendar.Profile.Login)
 		}
@@ -79,14 +82,6 @@ func (m Model) renderHeader(width int) string {
 
 	if len(metaParts) > 0 {
 		title = lipgloss.JoinVertical(lipgloss.Left, title, m.styles.muted.Render(strings.Join(metaParts, "  •  ")))
-	}
-
-	if m.calendar != nil {
-		if displayName == "" {
-			displayName = m.calendar.Profile.Login
-		}
-		profileText := truncate(fmt.Sprintf("%s %s  Window %s", displayName, handle, windowLabel), width)
-		title = lipgloss.JoinVertical(lipgloss.Left, title, m.styles.value.Render(profileText))
 	}
 
 	if m.calendar != nil && m.calendar.Profile.Bio != "" {
@@ -149,7 +144,7 @@ func (m Model) renderEmptyState(width int) string {
 }
 
 func (m Model) renderMain(width int) string {
-	if width < 92 {
+	if width < minCompactSplitWidth {
 		return strings.Join([]string{
 			m.renderChartPanel(width),
 			m.renderDetailsPanel(width),
@@ -157,19 +152,30 @@ func (m Model) renderMain(width int) string {
 	}
 
 	frame := m.styles.panel.GetHorizontalFrameSize()
-	detailsWidth := min(36, max(28, width/3))
-	availableChartWidth := max(42, width-detailsWidth-panelGap)
+	detailsWidth := min(maxDetailsWidth, max(minDetailsWidth, width/4))
+	availableChartWidth := max(minChartWidth, width-detailsWidth-panelGap)
 	chartGridWidth := dayLabelWidth + len(m.calendar.Weeks)*(cellWidth+cellGap)
 	if len(m.calendar.Weeks) > 0 {
 		chartGridWidth -= cellGap
 	}
-	chartMaxWidth := max(42, chartGridWidth+frame+2)
+	chartMaxWidth := max(minChartWidth, chartGridWidth+frame)
 	chartWidth := min(availableChartWidth, chartMaxWidth)
+	detailsWidth = width - chartWidth - panelGap
+	if detailsWidth < minDetailsWidth {
+		detailsWidth = minDetailsWidth
+		chartWidth = max(minChartWidth, width-detailsWidth-panelGap)
+	}
+
+	left := m.renderChartPanel(chartWidth)
+	right := m.renderDetailsPanel(detailsWidth)
+	panelHeight := max(lipgloss.Height(left), lipgloss.Height(right))
+	left = lipgloss.PlaceVertical(panelHeight, lipgloss.Top, left)
+	right = lipgloss.PlaceVertical(panelHeight, lipgloss.Top, right)
 
 	return lipgloss.JoinHorizontal(
 		lipgloss.Top,
-		lipgloss.NewStyle().MarginRight(panelGap).Render(m.renderChartPanel(chartWidth)),
-		m.renderDetailsPanel(detailsWidth),
+		lipgloss.NewStyle().MarginRight(panelGap).Render(left),
+		right,
 	)
 }
 
@@ -186,15 +192,27 @@ func (m Model) renderChartPanel(width int) string {
 		return panel.Render(strings.Join(content, "\n"))
 	}
 
-	if innerWidth < dayLabelWidth+12 {
+	if innerWidth < dayLabelWidth+cellWidth {
 		content = append(content, "Terminal is too narrow to render the chart.")
 		return panel.Render(strings.Join(content, "\n"))
 	}
 
-	maxWeeks := max(6, (innerWidth-dayLabelWidth)/(cellWidth+cellGap))
-	maxWeeks = min(maxWeeks, len(m.calendar.Weeks))
+	availableGridWidth := innerWidth - dayLabelWidth
+	safeGridWidth := availableGridWidth - (cellWidth + cellGap)
+	if safeGridWidth < cellWidth {
+		safeGridWidth = cellWidth
+	}
+	maxWeeks := (safeGridWidth + cellGap) / (cellWidth + cellGap)
+	maxWeeks = max(1, min(maxWeeks, len(m.calendar.Weeks)))
 
 	start, end := m.visibleWeeks(maxWeeks)
+	// When shrinking is needed, always remove from the left/start side so the
+	// last column stays visible and never wraps.
+	start = max(0, end-maxWeeks)
+	for !m.gridFits(innerWidth, start, end) && start < end-1 {
+		start++
+	}
+
 	content = append(content, m.renderMonthHeader(start, end))
 	content = append(content, m.renderRows(start, end)...)
 	content = append(content, "")
@@ -300,12 +318,11 @@ func (m Model) renderCell(day *contrib.Day) string {
 	}
 
 	if m.selected != nil && day.Date.Equal(m.selected.Date) {
-		glyph := lipgloss.Place(cellWidth, 1, lipgloss.Center, lipgloss.Center, "◉")
 		return style.
 			Bold(true).
 			Foreground(readableColor(day.Color)).
 			Background(lipgloss.Color(day.Color)).
-			Render(glyph)
+			Render("[]")
 	}
 
 	return style.Background(lipgloss.Color(day.Color)).Render(strings.Repeat(" ", cellWidth))
@@ -344,8 +361,9 @@ func (m Model) renderYearChips(width int) string {
 		pending = m.calendar.Year
 	}
 
-	chips := make([]string, 0, len(m.calendar.AvailableYears))
-	for _, year := range m.calendar.AvailableYears {
+	years := m.visibleYearWindow(pending, yearChipWindowSize)
+	chips := make([]string, 0, len(years))
+	for _, year := range years {
 		style := m.styles.chip
 		label := strconv.Itoa(year)
 		if year == m.calendar.Year && pending != m.calendar.Year {
@@ -363,6 +381,45 @@ func (m Model) renderYearChips(width int) string {
 	}
 
 	return strings.Join(chips, "\n")
+}
+
+func (m Model) visibleYearWindow(center, limit int) []int {
+	years := m.calendar.AvailableYears
+	if limit <= 0 || len(years) <= limit {
+		return years
+	}
+
+	index := 0
+	for i, year := range years {
+		if year == center {
+			index = i
+			break
+		}
+	}
+
+	start := index - limit/2
+	if start < 0 {
+		start = 0
+	}
+	end := start + limit
+	if end > len(years) {
+		end = len(years)
+		start = end - limit
+	}
+
+	return years[start:end]
+}
+
+func (m Model) gridFits(innerWidth, start, end int) bool {
+	if lipgloss.Width(m.renderMonthHeader(start, end)) > innerWidth {
+		return false
+	}
+	for _, row := range m.renderRows(start, end) {
+		if lipgloss.Width(row) > innerWidth {
+			return false
+		}
+	}
+	return true
 }
 
 func (m Model) visibleWeeks(maxWeeks int) (int, int) {

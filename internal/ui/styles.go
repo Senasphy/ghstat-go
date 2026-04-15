@@ -23,10 +23,10 @@ func newStyles() styles {
 	panelTitle := lipgloss.AdaptiveColor{Light: "#12252C", Dark: "#D5E9EE"}
 	text := lipgloss.AdaptiveColor{Light: "#142128", Dark: "#E7EFF2"}
 	muted := lipgloss.AdaptiveColor{Light: "#5E7078", Dark: "#91A4AD"}
-	accent := lipgloss.AdaptiveColor{Light: "#0E7490", Dark: "#7DD3E6"}
+	accent := lipgloss.AdaptiveColor{Light: "#1F7A45", Dark: "#7EE2A8"}
 	chipBg := lipgloss.AdaptiveColor{Light: "#EEF4F6", Dark: "#182329"}
-	activeBg := lipgloss.AdaptiveColor{Light: "#0E7490", Dark: "#1E5B69"}
-	activeFg := lipgloss.AdaptiveColor{Light: "#F4FDFF", Dark: "#E9FAFF"}
+	activeBg := lipgloss.AdaptiveColor{Light: "#D7E9DE", Dark: "#234236"}
+	activeFg := lipgloss.AdaptiveColor{Light: "#184C33", Dark: "#D6F5E4"}
 	titleBg := lipgloss.AdaptiveColor{Light: "#E8F4F7", Dark: "#15252B"}
 	error := lipgloss.AdaptiveColor{Light: "#A61B1B", Dark: "#FFB4A9"}
 	warning := lipgloss.AdaptiveColor{Light: "#8B5A00", Dark: "#F4C97A"}
@@ -35,7 +35,7 @@ func newStyles() styles {
 		app: lipgloss.NewStyle().
 			Padding(1, 2),
 		title: lipgloss.NewStyle().
-			Foreground(text).
+			Foreground(accent).
 			Background(titleBg).
 			Padding(0, 1).
 			Bold(true),
