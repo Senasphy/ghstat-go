@@ -24,12 +24,13 @@ builds:
       - -X main.date={{.Date}}
 archives:
   - id: default
-    builds:
+    ids:
       - ghstat-go
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
       - goos: windows
-        format: zip
+        formats:
+          - zip
 checksum:
   name_template: checksums.txt
 changelog:
@@ -41,7 +42,7 @@ changelog:
       - "^chore:"
 release:
   github:
-    owner: "{{ .Env.GITHUB_REPOSITORY_OWNER }}"
+    owner: senasphy
     name: ghstat-go
   draft: false
   prerelease: auto
