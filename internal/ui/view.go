@@ -185,6 +185,7 @@ func (m Model) renderChartPanel(width int) string {
 
 	content := []string{
 		m.styles.panelTitle.Render("Contribution Calendar"),
+		"",
 	}
 
 	if m.calendar == nil || len(m.calendar.Weeks) == 0 {
