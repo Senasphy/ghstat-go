@@ -1,6 +1,6 @@
 param(
   [string]$Version = "",
-  [string]$Repo = "senasphy/ghstat-go",
+  [string]$Repo = "Senasphy/ghstat-go",
   [string]$BinName = "ghstat-go",
   [string]$InstallDir = "$env:LOCALAPPDATA\Programs\ghstat-go\bin"
 )

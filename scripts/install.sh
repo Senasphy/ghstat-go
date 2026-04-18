@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-REPO="${GHSTAT_REPO:-senasphy/ghstat-go}"
+REPO="${GHSTAT_REPO:-Senasphy/ghstat-go}"
 BIN_NAME="${GHSTAT_BIN:-ghstat-go}"
 VERSION="${1:-${GHSTAT_VERSION:-}}"
 INSTALL_DIR="${GHSTAT_INSTALL_DIR:-/usr/local/bin}"
