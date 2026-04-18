@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -19,11 +20,16 @@ type options struct {
 	Token string
 }
 
+var errNoDefaultLogin = errors.New("no GitHub username argument and no local GitHub login found")
+
 func main() {
 	login, opts, err := parseOptions()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "ghstat: %v\n\n", err)
-		flag.Usage()
+		fmt.Fprintf(os.Stderr, "ghstat: %v\n", err)
+		if !errors.Is(err, errNoDefaultLogin) {
+			fmt.Fprintln(os.Stderr)
+			flag.Usage()
+		}
 		os.Exit(2)
 	}
 
@@ -58,13 +64,22 @@ func parseOptions() (string, options, error) {
 
 	flag.Parse()
 
-	if flag.NArg() != 1 {
-		return "", opts, errors.New("exactly one GitHub username is required")
+	if flag.NArg() > 1 {
+		return "", opts, errors.New("at most one GitHub username is allowed")
 	}
 
-	login := strings.TrimSpace(flag.Arg(0))
-	if login == "" {
-		return "", opts, errors.New("GitHub username cannot be empty")
+	var login string
+	if flag.NArg() == 1 {
+		login = strings.TrimSpace(flag.Arg(0))
+		if login == "" {
+			return "", opts, errors.New("GitHub username cannot be empty")
+		}
+	} else {
+		resolved, ok := resolveDefaultLogin()
+		if !ok {
+			return "", opts, errNoDefaultLogin
+		}
+		login = resolved
 	}
 
 	if opts.Year < 0 {
@@ -77,4 +92,42 @@ func parseOptions() (string, options, error) {
 	}
 
 	return login, opts, nil
+}
+
+func resolveDefaultLogin() (string, bool) {
+	envCandidates := []string{
+		"GITHUB_USER",
+		"GH_USER",
+		"GITHUB_USERNAME",
+	}
+	for _, key := range envCandidates {
+		if value := strings.TrimSpace(os.Getenv(key)); value != "" {
+			return value, true
+		}
+	}
+
+	if value, ok := runAndTrim("git", "config", "--get", "github.user"); ok {
+		return value, true
+	}
+	if value, ok := runAndTrim("git", "config", "--global", "--get", "github.user"); ok {
+		return value, true
+	}
+
+	if value, ok := runAndTrim("gh", "api", "user", "-q", ".login"); ok {
+		return value, true
+	}
+
+	return "", false
+}
+
+func runAndTrim(name string, args ...string) (string, bool) {
+	out, err := exec.Command(name, args...).Output()
+	if err != nil {
+		return "", false
+	}
+	value := strings.TrimSpace(string(out))
+	if value == "" {
+		return "", false
+	}
+	return value, true
 }
