@@ -21,10 +21,40 @@ It opens a live view where you can move day by day, inspect totals, and switch y
 go run . <github-username>
 ```
 
-## Install from Binaries
+## Install from Releases
 
 Prebuilt binaries are published with every release.
 Download the archive for your platform from the GitHub Releases page in the **Assets** section.
+
+### Quick Install Scripts
+
+You can install directly from releases using the scripts in this repository.
+
+Linux and macOS:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/senasphy/ghstat-go/main/scripts/install.sh | sh
+```
+
+Windows PowerShell:
+
+```powershell
+iwr -useb https://raw.githubusercontent.com/senasphy/ghstat-go/main/scripts/install.ps1 | iex
+```
+
+Install a specific version:
+
+Linux and macOS:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/senasphy/ghstat-go/main/scripts/install.sh | sh -s -- v1.2.3
+```
+
+Windows PowerShell:
+
+```powershell
+$tmp = Join-Path $env:TEMP "ghstat-install.ps1"; iwr -useb https://raw.githubusercontent.com/senasphy/ghstat-go/main/scripts/install.ps1 -OutFile $tmp; & $tmp -Version v1.2.3
+```
 
 Run with explicit token:
 
@@ -90,14 +120,15 @@ go run github.com/Khan/genqlient genqlient.yaml
 │       ├── release-validate.yml  # PR and main snapshot validation
 │       └── release.yml           # tag-driven release pipeline
 ├── cmd/
-│   └── main.go                   # CLI entrypoint
+│   └── ghstat-go/
+│       └── main.go               # CLI entrypoint
 ├── internal/
 │   ├── contrib/                  # calendar model, stats, and navigation
 │   ├── githubapi/                # GitHub GraphQL client and mapping
 │   └── ui/                       # terminal model, keys, styles, rendering
 ├── queries/                      # GraphQL operations
+├── scripts/                      # install scripts for release binaries
 ├── .goreleaser.yaml              # release packaging and publishing config
 ├── genqlient.yaml                # GraphQL code generation config
-├── main.go                       # root entrypoint used for local run
 └── schema.graphql                # pinned GraphQL schema
 ```
