@@ -19,7 +19,6 @@ type styles struct {
 }
 
 func newStyles() styles {
-	border := lipgloss.AdaptiveColor{Light: "#B8C2C8", Dark: "#405159"}
 	panelTitle := lipgloss.AdaptiveColor{Light: "#12252C", Dark: "#D5E9EE"}
 	text := lipgloss.AdaptiveColor{Light: "#142128", Dark: "#E7EFF2"}
 	muted := lipgloss.AdaptiveColor{Light: "#5E7078", Dark: "#91A4AD"}
@@ -45,7 +44,7 @@ func newStyles() styles {
 			Foreground(muted),
 		panel: lipgloss.NewStyle().
 			Border(lipgloss.NormalBorder()).
-			BorderForeground(border).
+			BorderForeground(accent).
 			Padding(0, 1),
 		panelTitle: lipgloss.NewStyle().
 			Foreground(panelTitle).
