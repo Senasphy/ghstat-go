@@ -17,7 +17,8 @@ function Resolve-Arch {
 }
 
 function Resolve-LatestVersion {
-  $latest = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases/latest"
+  $latest = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases/latest" `
+    -Headers @{ "User-Agent" = "ghstat-installer" }
   return $latest.tag_name
 }
 
@@ -31,17 +32,24 @@ if ([string]::IsNullOrWhiteSpace($Version)) {
   throw "Failed to resolve release version"
 }
 
+# 🔥 FIX: normalize version
+$Version = $Version.TrimStart("v")
+
 $arch = Resolve-Arch
 $os = "windows"
+
 $artifact = "${BinName}_${Version}_${os}_${arch}.zip"
-$url = "https://github.com/$Repo/releases/download/$Version/$artifact"
+$url = "https://github.com/$Repo/releases/download/v$Version/$artifact"
 
 $tmpDir = Join-Path $env:TEMP ("ghstat-install-" + [System.Guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path $tmpDir | Out-Null
 
 try {
   $archivePath = Join-Path $tmpDir $artifact
-  Invoke-WebRequest -Uri $url -OutFile $archivePath
+
+  Write-Host "Downloading $url ..."
+  Invoke-WebRequest -Uri $url -OutFile $archivePath -ErrorAction Stop
+
   Expand-Archive -Path $archivePath -DestinationPath $tmpDir -Force
 
   $sourceExe = Join-Path $tmpDir "$BinName.exe"
