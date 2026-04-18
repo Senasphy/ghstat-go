@@ -42,25 +42,30 @@ detect_arch() {
 }
 
 resolve_latest_version() {
-  curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" \
-    | sed -n 's/.*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' \
-    | head -n 1
+  curl -fsSL -H "User-Agent: ghstat-installer" \
+    "https://api.github.com/repos/${REPO}/releases/latest" \
+  | sed -n 's/.*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' \
+  | head -n 1
 }
 
 OS="$(detect_os)"
 ARCH="$(detect_arch)"
 
-if [ -z "$VERSION" ]; then
+# Resolve version
+if [ -z "${VERSION}" ]; then
   VERSION="$(resolve_latest_version)"
 fi
 
-if [ -z "$VERSION" ]; then
+if [ -z "${VERSION}" ]; then
   echo "failed to resolve release version" >&2
   exit 1
 fi
 
+# 🔥 FIX: normalize version (remove leading v)
+VERSION="${VERSION#v}"
+
 ARTIFACT="${BIN_NAME}_${VERSION}_${OS}_${ARCH}.tar.gz"
-URL="https://github.com/${REPO}/releases/download/${VERSION}/${ARTIFACT}"
+URL="https://github.com/${REPO}/releases/download/v${VERSION}/${ARTIFACT}"
 
 TMP_DIR="$(mktemp -d)"
 cleanup() {
@@ -69,10 +74,14 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 ARCHIVE_PATH="${TMP_DIR}/${ARTIFACT}"
+
+echo "Downloading ${URL} ..."
 curl -fL "$URL" -o "$ARCHIVE_PATH"
+
 tar -xzf "$ARCHIVE_PATH" -C "$TMP_DIR"
 
 SOURCE_BIN="${TMP_DIR}/${BIN_NAME}"
+
 if [ ! -f "$SOURCE_BIN" ]; then
   echo "binary not found in archive: $SOURCE_BIN" >&2
   exit 1
@@ -93,6 +102,8 @@ else
 fi
 
 echo "installed ${BIN_NAME} ${VERSION} to ${TARGET_BIN}"
+
+# PATH warning
 if ! printf '%s' "$PATH" | tr ':' '\n' | grep -qx "$INSTALL_DIR"; then
   echo "note: ${INSTALL_DIR} is not in PATH"
 fi
