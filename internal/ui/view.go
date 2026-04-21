@@ -32,9 +32,7 @@ func (m Model) View() string {
 	}
 
 	contentWidth := m.width - m.styles.app.GetHorizontalFrameSize()
-	if contentWidth < 1 {
-		contentWidth = 1
-	}
+	contentWidth = max(contentWidth, 1)
 	header := m.renderHeader(contentWidth)
 	helpText := m.styles.help.Render(m.help.View(m.keys))
 	sections := []string{header}
@@ -114,7 +112,6 @@ func (m Model) renderStatus() string {
 }
 
 func (m Model) renderEmptyState(width int) string {
-	body := "No contribution data loaded yet."
 	if m.loading {
 		title := m.styles.accent.Render(fmt.Sprintf("%s Loading window %d", m.spinner.View(), m.loadingYearOrCurrent()))
 		subtitle := m.styles.muted.Render("Fetching your contribution calendar from GitHub")
@@ -129,18 +126,26 @@ func (m Model) renderEmptyState(width int) string {
 		)
 		return lipgloss.PlaceHorizontal(width, lipgloss.Center, content)
 	}
+
 	if m.err != nil {
-		body = m.err.Error()
+		title := m.styles.error.Render("Unable to Load Contributions")
+		summary := m.styles.muted.Render(truncate(summarizeLoadError(m.err), width))
+		hint := m.styles.muted.Render("Check connection or token, then run again")
+		content := lipgloss.JoinVertical(
+			lipgloss.Center,
+			title,
+			"",
+			summary,
+			"",
+			hint,
+		)
+		return lipgloss.PlaceHorizontal(width, lipgloss.Center, content)
 	}
 
-	panel := m.panelWithTotalWidth(width)
-	return panel.Render(
-		lipgloss.JoinVertical(
-			lipgloss.Left,
-			m.styles.panelTitle.Render("Loading"),
-			body,
-		),
-	)
+	title := m.styles.panelTitle.Render("No Data")
+	summary := m.styles.muted.Render("No contribution data loaded yet.")
+	content := lipgloss.JoinVertical(lipgloss.Center, title, "", summary)
+	return lipgloss.PlaceHorizontal(width, lipgloss.Center, content)
 }
 
 func (m Model) renderMain(width int) string {
@@ -554,4 +559,33 @@ func truncate(value string, width int) string {
 	}
 
 	return string(trimmed) + "…"
+}
+
+func summarizeLoadError(err error) string {
+	if err == nil {
+		return ""
+	}
+
+	message := strings.TrimSpace(err.Error())
+	lower := strings.ToLower(message)
+
+	switch {
+	case strings.Contains(lower, "no such host"),
+		strings.Contains(lower, "network is unreachable"),
+		strings.Contains(lower, "temporary failure in name resolution"),
+		strings.Contains(lower, "i/o timeout"),
+		strings.Contains(lower, "tls handshake timeout"),
+		strings.Contains(lower, "context deadline exceeded"),
+		strings.Contains(lower, "connection refused"),
+		strings.Contains(lower, "dial tcp"):
+		return "Cannot reach GitHub right now. Check your internet connection and try again."
+	case strings.Contains(lower, "unauthorized"), strings.Contains(lower, "401"):
+		return "GitHub authentication failed. Verify your token and try again."
+	case strings.Contains(lower, "forbidden"), strings.Contains(lower, "403"):
+		return "GitHub rejected this request. Check token access and profile settings."
+	case strings.Contains(lower, "was not found"):
+		return "The requested GitHub user was not found."
+	default:
+		return message
+	}
 }
