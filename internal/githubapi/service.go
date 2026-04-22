@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -167,12 +168,8 @@ func buildCalendar(resp *GetContributionCalendarResponse, year int, now time.Tim
 }
 
 func containsYear(years []int, year int) bool {
-	for _, candidate := range years {
-		if candidate == year {
-			return true
-		}
-	}
-	return false
+	doesContain := slices.Contains(years, year)
+	return doesContain
 }
 
 func rowFromWeekday(weekday int) int {

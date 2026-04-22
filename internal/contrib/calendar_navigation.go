@@ -115,9 +115,7 @@ func (c *Calendar) JumpMonth(day *Day, delta int) *Day {
 	}
 
 	target := current + delta
-	if target < 0 {
-		target = 0
-	}
+	target = max(target, 0)
 	if target >= len(c.Months) {
 		target = len(c.Months) - 1
 	}
