@@ -404,9 +404,7 @@ func (m Model) visibleYearWindow(center, limit int) []int {
 	}
 
 	start := index - limit/2
-	if start < 0 {
-		start = 0
-	}
+	start = max(0, start)
 	end := start + limit
 	if end > len(years) {
 		end = len(years)
@@ -461,9 +459,7 @@ func (m Model) loadingYearOrCurrent() int {
 
 func (m Model) panelWithTotalWidth(totalWidth int) lipgloss.Style {
 	contentWidth := totalWidth - m.styles.panel.GetHorizontalFrameSize()
-	if contentWidth < 1 {
-		contentWidth = 1
-	}
+	contentWidth = max(1, contentWidth)
 	return m.styles.panel.Width(contentWidth)
 }
 
