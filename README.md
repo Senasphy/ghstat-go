@@ -26,6 +26,20 @@ go run . <github-username>
 Prebuilt binaries are published with every release.
 Download the archive for your platform from the GitHub Releases page in the **Assets** section.
 
+## Install with Go
+
+Install the latest version:
+
+```bash
+go install github.com/senasphy/ghstat-go/cmd/ghstat-go@latest
+```
+
+Install a specific version:
+
+```bash
+go install github.com/senasphy/ghstat-go/cmd/ghstat-go@v0.1.1
+```
+
 ### Quick Install Scripts
 
 You can install directly from releases using the scripts in this repository.
@@ -85,10 +99,6 @@ go run . --year 2025 <github-username>
 - `t`: jump to today if it exists in the current window
 - `?`: toggle help
 - `q`, `Esc`, `Ctrl+C`: quit
-
-## Behavior Note
-
-- The selected year chip is only a pending selection until you press `Enter`.
 
 ## Verification
 
