@@ -32,7 +32,6 @@ if ([string]::IsNullOrWhiteSpace($Version)) {
   throw "Failed to resolve release version"
 }
 
-# 🔥 FIX: normalize version
 $Version = $Version.TrimStart("v")
 
 $arch = Resolve-Arch
