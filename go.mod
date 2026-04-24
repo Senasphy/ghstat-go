@@ -1,4 +1,4 @@
-module ghstat-go
+module github.com/senasphy/ghstat-go
 
 go 1.25.0
 

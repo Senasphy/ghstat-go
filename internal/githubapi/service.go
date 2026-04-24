@@ -11,7 +11,7 @@ import (
 
 	"github.com/Khan/genqlient/graphql"
 
-	"ghstat-go/internal/contrib"
+	"github.com/senasphy/ghstat-go/internal/contrib"
 )
 
 const dateLayout = "2006-01-02"

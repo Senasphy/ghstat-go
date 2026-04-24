@@ -9,8 +9,8 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 
-	"ghstat-go/internal/contrib"
-	"ghstat-go/internal/githubapi"
+	"github.com/senasphy/ghstat-go/internal/contrib"
+	"github.com/senasphy/ghstat-go/internal/githubapi"
 )
 
 type Model struct {

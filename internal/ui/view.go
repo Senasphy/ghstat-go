@@ -9,7 +9,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 
-	"ghstat-go/internal/contrib"
+	"github.com/senasphy/ghstat-go/internal/contrib"
 )
 
 const (
