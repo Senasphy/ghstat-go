@@ -90,14 +90,14 @@ func (m Model) renderHeader(width int) string {
 		)
 	}
 
-	if status := m.renderStatus(); status != "" {
+	if status := m.renderStatus(width); status != "" {
 		title = lipgloss.JoinVertical(lipgloss.Left, title, status)
 	}
 
 	return title
 }
 
-func (m Model) renderStatus() string {
+func (m Model) renderStatus(width int) string {
 	switch {
 	case m.loading:
 		if m.calendar == nil {
@@ -105,7 +105,7 @@ func (m Model) renderStatus() string {
 		}
 		return m.styles.warning.Render(fmt.Sprintf("%s loading %d", m.spinner.View(), m.loadingYearOrCurrent()))
 	case m.err != nil:
-		return m.styles.error.Render(m.err.Error())
+		return m.styles.error.Render(truncate(summarizeLoadError(m.err), width))
 	default:
 		return ""
 	}
@@ -128,18 +128,25 @@ func (m Model) renderEmptyState(width int) string {
 	}
 
 	if m.err != nil {
+		totalWidth := min(78, width)
+		if totalWidth < 36 {
+			totalWidth = width
+		}
+		panel := m.panelWithTotalWidth(totalWidth).Copy().Padding(1, 2)
+		innerWidth := max(1, totalWidth-m.styles.panel.GetHorizontalFrameSize())
+
 		title := m.styles.error.Render("Unable to Load Contributions")
-		summary := m.styles.muted.Render(truncate(summarizeLoadError(m.err), width))
+		summary := m.styles.muted.Render(lipgloss.NewStyle().Width(innerWidth).Render(summarizeLoadError(m.err)))
 		hint := m.styles.muted.Render("Check connection or token, then run again")
 		content := lipgloss.JoinVertical(
-			lipgloss.Center,
+			lipgloss.Left,
 			title,
 			"",
 			summary,
 			"",
 			hint,
 		)
-		return lipgloss.PlaceHorizontal(width, lipgloss.Center, content)
+		return lipgloss.PlaceHorizontal(width, lipgloss.Center, panel.Render(content))
 	}
 
 	title := m.styles.panelTitle.Render("No Data")
