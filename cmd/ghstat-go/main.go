@@ -11,8 +11,8 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"ghstat-go/internal/githubapi"
-	"ghstat-go/internal/ui"
+	"github.com/senasphy/ghstat-go/internal/githubapi"
+	"github.com/senasphy/ghstat-go/internal/ui"
 )
 
 type options struct {
