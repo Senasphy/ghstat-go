@@ -18,6 +18,7 @@ type styles struct {
 	value      lipgloss.Style
 }
 
+
 func newStyles() styles {
 	panelTitle := lipgloss.AdaptiveColor{Light: "#12252C", Dark: "#D5E9EE"}
 	text := lipgloss.AdaptiveColor{Light: "#142128", Dark: "#E7EFF2"}

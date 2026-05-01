@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
-
 	"github.com/senasphy/ghstat-go/internal/contrib"
 )
 
@@ -212,9 +211,7 @@ func (m Model) renderChartPanel(width int) string {
 
 	availableGridWidth := innerWidth - dayLabelWidth
 	safeGridWidth := availableGridWidth - (cellWidth + cellGap)
-	if safeGridWidth < cellWidth {
-		safeGridWidth = cellWidth
-	}
+	safeGridWidth = max(safeGridWidth, cellWidth)
 	maxWeeks := (safeGridWidth + cellGap) / (cellWidth + cellGap)
 	maxWeeks = max(1, min(maxWeeks, len(m.calendar.Weeks)))
 
